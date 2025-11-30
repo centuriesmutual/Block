@@ -134,11 +134,8 @@ export default function Dashboard() {
   }
 
   const handleLogout = () => {
-    // Reset to default user instead of redirecting
-    const defaultUser = { email: 'user@example.com', loggedIn: true, timestamp: Date.now() }
-    localStorage.setItem('user', JSON.stringify(defaultUser))
-    setUser(defaultUser)
-    setShowProfileMenu(false)
+    localStorage.removeItem('user')
+    window.location.href = 'https://centuriesmutual.com/login'
   }
 
   if (!user) {
@@ -152,32 +149,25 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8f9fa' }}>
       {/* Top Navigation Bar */}
-      <div style={{ background: 'white', borderBottom: '2px solid #e9ecef', padding: '1rem 0' }}>
-        <div className="container">
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="d-flex align-items-center gap-4">
-              <h4 className="mb-0 fw-bold" style={{ color: '#14432A' }}>Dashboard</h4>
-              <div className="input-group" style={{ width: '300px' }}>
+      <div style={{ background: 'white', borderBottom: '2px solid #e9ecef', padding: '0.75rem 0' }}>
+        <div className="container-fluid px-3 px-md-4">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div className="d-flex align-items-center gap-2 gap-md-4 flex-grow-1">
+              <h4 className="mb-0 fw-bold" style={{ color: '#14432A', fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>Dashboard</h4>
+              <div className="input-group d-none d-md-flex" style={{ maxWidth: '300px', flexGrow: 1 }}>
                 <span className="input-group-text bg-white border-end-0">
-                  <MagnifyingGlassIcon style={{ width: '20px', height: '20px', color: '#6c757d' }} />
+                  <MagnifyingGlassIcon style={{ width: '18px', height: '18px', color: '#6c757d' }} />
                 </span>
                 <input
                   type="text"
                   className="form-control border-start-0"
                   placeholder="Search..."
-                  style={{ borderLeft: 'none' }}
+                  style={{ borderLeft: 'none', fontSize: '0.875rem' }}
                 />
               </div>
             </div>
             <div className="d-flex align-items-center gap-3">
-              <button
-                className="btn btn-outline-secondary border-0 position-relative"
-                onClick={() => setShowCallModal(true)}
-                style={{ background: '#007AFF', color: 'white' }}
-              >
-                <PhoneIcon style={{ width: '24px', height: '24px' }} />
-              </button>
-              <button className="btn btn-outline-secondary border-0 position-relative">
+              <button className="btn btn-outline-secondary border-0 position-relative d-none d-md-block">
                 <BellIcon style={{ width: '24px', height: '24px' }} />
                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
                   3
@@ -241,75 +231,83 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="container-fluid py-4">
-        <div className="row">
+      <div className="container-fluid px-2 px-md-4 py-3 py-md-4">
+        <div className="row g-3">
           {/* Sidebar Navigation */}
-          <div className="col-md-3 col-lg-2 mb-4 mb-md-0">
-            <div className="card border-0 shadow-sm" style={{ borderRadius: '16px', position: 'sticky', top: '20px' }}>
-              <div className="card-body p-3">
-                <nav className="nav flex-column gap-2">
+          <div className="col-12 col-md-3 col-lg-2 mb-2 mb-md-0">
+            <div className="card border-0 shadow-sm" style={{ borderRadius: '12px', position: 'sticky', top: '20px' }}>
+              <div className="card-body p-2 p-md-3">
+                <nav className="nav flex-column gap-1 gap-md-2">
                   <button
-                    className={`btn text-start border-0 d-flex align-items-center gap-3 p-3 ${activeView === 'calendar' ? 'bg-primary text-white' : ''}`}
+                    className={`btn text-start border-0 d-flex align-items-center gap-2 gap-md-3 p-2 p-md-3 ${activeView === 'calendar' ? 'bg-primary text-white' : ''}`}
                     onClick={() => setActiveView('calendar')}
                     style={{
-                      borderRadius: '12px',
-                      backgroundColor: activeView === 'calendar' ? '#14432A' : 'transparent'
+                      borderRadius: '10px',
+                      backgroundColor: activeView === 'calendar' ? '#14432A' : 'transparent',
+                      fontSize: '0.875rem'
                     }}
                   >
                     {activeView === 'calendar' ? (
-                      <CalendarIconSolid style={{ width: '24px', height: '24px' }} />
+                      <CalendarIconSolid style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     ) : (
-                      <CalendarIcon style={{ width: '24px', height: '24px' }} />
+                      <CalendarIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     )}
-                    <span>Calendar</span>
+                    <span className="d-none d-md-inline">Calendar</span>
+                    <span className="d-md-none">Cal</span>
                   </button>
                   <button
-                    className={`btn text-start border-0 d-flex align-items-center gap-3 p-3 ${activeView === 'mailbox' ? 'bg-primary text-white' : ''}`}
+                    className={`btn text-start border-0 d-flex align-items-center gap-2 gap-md-3 p-2 p-md-3 ${activeView === 'mailbox' ? 'bg-primary text-white' : ''}`}
                     onClick={() => setActiveView('mailbox')}
                     style={{
-                      borderRadius: '12px',
-                      backgroundColor: activeView === 'mailbox' ? '#14432A' : 'transparent'
+                      borderRadius: '10px',
+                      backgroundColor: activeView === 'mailbox' ? '#14432A' : 'transparent',
+                      fontSize: '0.875rem'
                     }}
                   >
                     {activeView === 'mailbox' ? (
-                      <EnvelopeIconSolid style={{ width: '24px', height: '24px' }} />
+                      <EnvelopeIconSolid style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     ) : (
-                      <EnvelopeIcon style={{ width: '24px', height: '24px' }} />
+                      <EnvelopeIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     )}
-                    <span>Mailbox</span>
+                    <span className="d-none d-md-inline">Mailbox</span>
+                    <span className="d-md-none">Mail</span>
                     {messages.filter(m => m.unread).length > 0 && (
-                      <span className="badge bg-danger ms-auto">{messages.filter(m => m.unread).length}</span>
+                      <span className="badge bg-danger ms-auto" style={{ fontSize: '0.65rem' }}>{messages.filter(m => m.unread).length}</span>
                     )}
                   </button>
                   <button
-                    className={`btn text-start border-0 d-flex align-items-center gap-3 p-3 ${activeView === 'foryou' ? 'bg-primary text-white' : ''}`}
+                    className={`btn text-start border-0 d-flex align-items-center gap-2 gap-md-3 p-2 p-md-3 ${activeView === 'foryou' ? 'bg-primary text-white' : ''}`}
                     onClick={() => setActiveView('foryou')}
                     style={{
-                      borderRadius: '12px',
-                      backgroundColor: activeView === 'foryou' ? '#14432A' : 'transparent'
+                      borderRadius: '10px',
+                      backgroundColor: activeView === 'foryou' ? '#14432A' : 'transparent',
+                      fontSize: '0.875rem'
                     }}
                   >
                     {activeView === 'foryou' ? (
-                      <SparklesIconSolid style={{ width: '24px', height: '24px' }} />
+                      <SparklesIconSolid style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     ) : (
-                      <SparklesIcon style={{ width: '24px', height: '24px' }} />
+                      <SparklesIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     )}
-                    <span>For You</span>
+                    <span className="d-none d-md-inline">For You</span>
+                    <span className="d-md-none">Feed</span>
                   </button>
                   <button
-                    className={`btn text-start border-0 d-flex align-items-center gap-3 p-3 ${activeView === 'wallet' ? 'bg-primary text-white' : ''}`}
+                    className={`btn text-start border-0 d-flex align-items-center gap-2 gap-md-3 p-2 p-md-3 ${activeView === 'wallet' ? 'bg-primary text-white' : ''}`}
                     onClick={() => setActiveView('wallet')}
                     style={{
-                      borderRadius: '12px',
-                      backgroundColor: activeView === 'wallet' ? '#14432A' : 'transparent'
+                      borderRadius: '10px',
+                      backgroundColor: activeView === 'wallet' ? '#14432A' : 'transparent',
+                      fontSize: '0.875rem'
                     }}
                   >
                     {activeView === 'wallet' ? (
-                      <WalletIconSolid style={{ width: '24px', height: '24px' }} />
+                      <WalletIconSolid style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     ) : (
-                      <WalletIcon style={{ width: '24px', height: '24px' }} />
+                      <WalletIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
                     )}
-                    <span>Wallet</span>
+                    <span className="d-none d-md-inline">Wallet</span>
+                    <span className="d-md-none">Wallet</span>
                   </button>
                 </nav>
               </div>
@@ -317,82 +315,102 @@ export default function Dashboard() {
           </div>
 
           {/* Main Content Area */}
-          <div className="col-md-9 col-lg-10">
-            {/* Calendar View - Apple Style */}
+          <div className="col-12 col-md-9 col-lg-10">
+            {/* Calendar View - Wide Symmetrical Apple Style */}
             {activeView === 'calendar' && (
-              <div className="row g-0">
-                {/* Left Side - Mini Calendar */}
-                <div className="col-lg-4 pe-lg-3 mb-4 mb-lg-0">
-                  <div className="card border-0 shadow-sm" style={{ borderRadius: '12px', background: '#f8f9fa' }}>
-                    <div className="card-body p-4">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="mb-0 fw-bold" style={{ fontSize: '1.1rem', color: '#1d1d1f' }}>
-                          {monthNames[currentMonth]} {currentYear}
-                        </h5>
-                        <div className="d-flex gap-1">
-                          <button
-                            className="btn btn-sm border-0"
-                            onClick={() => navigateMonth('prev')}
-                            style={{ background: 'white', padding: '4px 8px' }}
-                          >
-                            <ArrowLeftIcon style={{ width: '16px', height: '16px' }} />
-                          </button>
-                          <button
-                            className="btn btn-sm border-0"
-                            onClick={() => {
-                              setCurrentMonth(new Date().getMonth())
-                              setCurrentYear(new Date().getFullYear())
-                              setSelectedDate(new Date())
-                            }}
-                            style={{ background: 'white', padding: '4px 8px', fontSize: '0.75rem' }}
-                          >
-                            Today
-                          </button>
-                          <button
-                            className="btn btn-sm border-0"
-                            onClick={() => navigateMonth('next')}
-                            style={{ background: 'white', padding: '4px 8px' }}
-                          >
-                            <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
-                          </button>
+              <div>
+                {/* Calendar Header */}
+                <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '12px' }}>
+                  <div className="card-body p-4">
+                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+                      <h4 className="mb-0 fw-bold" style={{ fontSize: '1.5rem', color: '#1d1d1f' }}>
+                        {monthNames[currentMonth]} {currentYear}
+                      </h4>
+                      <div className="d-flex gap-2 align-items-center">
+                        <button
+                          className="btn btn-sm border"
+                          onClick={() => navigateMonth('prev')}
+                          style={{ background: 'white', padding: '6px 12px', borderRadius: '8px' }}
+                        >
+                          <ArrowLeftIcon style={{ width: '18px', height: '18px' }} />
+                        </button>
+                        <button
+                          className="btn btn-sm border"
+                          onClick={() => {
+                            setCurrentMonth(new Date().getMonth())
+                            setCurrentYear(new Date().getFullYear())
+                            setSelectedDate(new Date())
+                          }}
+                          style={{ background: 'white', padding: '6px 16px', borderRadius: '8px', fontSize: '0.875rem' }}
+                        >
+                          Today
+                        </button>
+                        <button
+                          className="btn btn-sm border"
+                          onClick={() => navigateMonth('next')}
+                          style={{ background: 'white', padding: '6px 12px', borderRadius: '8px' }}
+                        >
+                          <ArrowRightIcon style={{ width: '18px', height: '18px' }} />
+                        </button>
+                        <button
+                          className="btn btn-sm ms-2"
+                          onClick={() => {
+                            setEditingEvent(null)
+                            setShowEventModal(true)
+                          }}
+                          style={{
+                            background: '#007AFF',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '6px 16px',
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}
+                        >
+                          <PlusIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
+                          New Event
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Calendar Grid - Wide Symmetrical */}
+                    <div className="row g-0 mb-2 mb-md-3">
+                      {dayNames.map(day => (
+                        <div key={day} className="col text-center fw-semibold" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.875rem)', color: '#86868b', padding: '6px 2px', fontWeight: '500' }}>
+                          {day}
                         </div>
-                      </div>
-                      <div className="row g-0 mb-2">
-                        {dayNames.map(day => (
-                          <div key={day} className="col text-center" style={{ fontSize: '0.75rem', color: '#86868b', padding: '4px 0', fontWeight: '500' }}>
-                            {day}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="row g-0">
-                        {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-                          <div key={`empty-${idx}`} className="col" style={{ aspectRatio: '1', padding: '2px' }}></div>
-                        ))}
-                        {Array.from({ length: daysInMonth }).map((_, idx) => {
-                          const date = idx + 1
-                          const dayEvents = getEventsForDate(date)
-                          const isToday = date === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
-                          const isSelected = selectedDate.getDate() === date && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear
-                          return (
+                      ))}
+                    </div>
+                    <div className="row g-0">
+                      {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+                        <div key={`empty-${idx}`} className="col" style={{ aspectRatio: '1', padding: '2px' }}></div>
+                      ))}
+                      {Array.from({ length: daysInMonth }).map((_, idx) => {
+                        const date = idx + 1
+                        const dayEvents = getEventsForDate(date)
+                        const isToday = date === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
+                        const isSelected = selectedDate.getDate() === date && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear
+                        return (
+                          <div
+                            key={date}
+                            className="col position-relative"
+                            style={{ aspectRatio: '1', padding: '2px', cursor: 'pointer' }}
+                            onClick={() => setSelectedDate(new Date(currentYear, currentMonth, date))}
+                          >
                             <div
-                              key={date}
-                              className="col position-relative"
-                              style={{ aspectRatio: '1', padding: '2px', cursor: 'pointer' }}
-                              onClick={() => setSelectedDate(new Date(currentYear, currentMonth, date))}
+                              className="d-flex flex-column align-items-center justify-content-center h-100 rounded"
+                              style={{
+                                background: isToday ? '#007AFF' : isSelected ? '#e5e5ea' : 'transparent',
+                                color: isToday ? 'white' : isSelected ? '#1d1d1f' : '#1d1d1f',
+                                fontWeight: isToday || isSelected ? '600' : '400',
+                                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                                minHeight: '40px'
+                              }}
                             >
-                              <div
-                                className="d-flex align-items-center justify-content-center h-100 rounded"
-                                style={{
-                                  background: isToday ? '#007AFF' : isSelected ? '#e5e5ea' : 'transparent',
-                                  color: isToday ? 'white' : isSelected ? '#1d1d1f' : '#1d1d1f',
-                                  fontWeight: isToday || isSelected ? '600' : '400',
-                                  fontSize: '0.875rem'
-                                }}
-                              >
-                                {date}
-                              </div>
+                              <span>{date}</span>
                               {dayEvents.length > 0 && (
-                                <div className="position-absolute bottom-0 start-50 translate-middle-x d-flex gap-1" style={{ transform: 'translateX(-50%)' }}>
+                                <div className="d-flex flex-wrap justify-content-center" style={{ maxWidth: '100%', gap: '2px', marginTop: '2px' }}>
                                   {dayEvents.slice(0, 3).map(event => (
                                     <div
                                       key={event.id}
@@ -404,117 +422,101 @@ export default function Dashboard() {
                                       }}
                                     ></div>
                                   ))}
+                                  {dayEvents.length > 3 && (
+                                    <span style={{ fontSize: '0.55rem', color: isToday ? 'rgba(255,255,255,0.8)' : '#86868b' }}>
+                                      +{dayEvents.length - 3}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </div>
-                          )
-                        })}
-                      </div>
-                      <button
-                        className="btn w-100 mt-3 d-flex align-items-center justify-content-center gap-2"
-                        onClick={() => {
-                          setEditingEvent(null)
-                          setShowEventModal(true)
-                        }}
-                        style={{
-                          background: '#007AFF',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '8px',
-                          fontSize: '0.875rem',
-                          fontWeight: '500'
-                        }}
-                      >
-                        <PlusIcon style={{ width: '16px', height: '16px' }} />
-                        New Event
-                      </button>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side - Event List */}
-                <div className="col-lg-8">
-                  <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                    <div className="card-body p-0">
-                      <div className="p-4 border-bottom">
-                        <h5 className="mb-0 fw-bold" style={{ fontSize: '1.1rem', color: '#1d1d1f' }}>
-                          {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                        </h5>
-                      </div>
-                      <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                        {getEventsForDate(selectedDate.getDate()).length > 0 ? (
-                          getEventsForDate(selectedDate.getDate()).map(event => (
+                {/* Event List - Full Width */}
+                <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
+                  <div className="card-body p-0">
+                    <div className="p-4 border-bottom">
+                      <h5 className="mb-0 fw-bold" style={{ fontSize: '1.1rem', color: '#1d1d1f' }}>
+                        {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                      </h5>
+                    </div>
+                    <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                      {getEventsForDate(selectedDate.getDate()).length > 0 ? (
+                        getEventsForDate(selectedDate.getDate()).map(event => (
+                          <div
+                            key={event.id}
+                            className="p-4 border-bottom d-flex align-items-start gap-3"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setEditingEvent(event)
+                              setShowEventModal(true)
+                            }}
+                          >
                             <div
-                              key={event.id}
-                              className="p-4 border-bottom d-flex align-items-start gap-3"
-                              style={{ cursor: 'pointer' }}
-                              onClick={() => {
-                                setEditingEvent(event)
-                                setShowEventModal(true)
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                backgroundColor: event.color || '#007AFF',
+                                marginTop: '6px',
+                                flexShrink: 0
                               }}
-                            >
-                              <div
-                                style={{
-                                  width: '12px',
-                                  height: '12px',
-                                  borderRadius: '50%',
-                                  backgroundColor: event.color || '#007AFF',
-                                  marginTop: '6px',
-                                  flexShrink: 0
-                                }}
-                              ></div>
-                              <div className="flex-grow-1">
-                                <h6 className="mb-1 fw-bold" style={{ fontSize: '1rem', color: '#1d1d1f' }}>{event.title}</h6>
-                                <div className="d-flex align-items-center gap-3 text-muted" style={{ fontSize: '0.875rem' }}>
-                                  <span>{event.time} - {event.endTime}</span>
-                                  {event.location && <span>• {event.location}</span>}
-                                </div>
-                                {event.notes && (
-                                  <p className="mb-0 mt-2 text-muted" style={{ fontSize: '0.875rem' }}>{event.notes}</p>
-                                )}
+                            ></div>
+                            <div className="flex-grow-1">
+                              <h6 className="mb-1 fw-bold" style={{ fontSize: '1rem', color: '#1d1d1f' }}>{event.title}</h6>
+                              <div className="d-flex flex-wrap align-items-center gap-3 text-muted" style={{ fontSize: '0.875rem' }}>
+                                <span>{event.time} - {event.endTime}</span>
+                                {event.location && <span>• {event.location}</span>}
                               </div>
-                              <div className="d-flex gap-2">
-                                <button
-                                  className="btn btn-sm border-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setEditingEvent(event)
-                                    setShowEventModal(true)
-                                  }}
-                                  style={{ padding: '4px 8px' }}
-                                >
-                                  <PencilIcon style={{ width: '16px', height: '16px', color: '#86868b' }} />
-                                </button>
-                                <button
-                                  className="btn btn-sm border-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setEvents(events.filter(e => e.id !== event.id))
-                                  }}
-                                  style={{ padding: '4px 8px' }}
-                                >
-                                  <TrashIcon style={{ width: '16px', height: '16px', color: '#ff3b30' }} />
-                                </button>
-                              </div>
+                              {event.notes && (
+                                <p className="mb-0 mt-2 text-muted" style={{ fontSize: '0.875rem' }}>{event.notes}</p>
+                              )}
                             </div>
-                          ))
-                        ) : (
-                          <div className="p-5 text-center">
-                            <p className="text-muted mb-0">No events scheduled for this day</p>
-                            <button
-                              className="btn btn-link mt-2 p-0"
-                              onClick={() => {
-                                setEditingEvent(null)
-                                setShowEventModal(true)
-                              }}
-                              style={{ color: '#007AFF', textDecoration: 'none', fontSize: '0.875rem' }}
-                            >
-                              Create new event
-                            </button>
+                            <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-sm border-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setEditingEvent(event)
+                                  setShowEventModal(true)
+                                }}
+                                style={{ padding: '4px 8px' }}
+                              >
+                                <PencilIcon style={{ width: '16px', height: '16px', color: '#86868b' }} />
+                              </button>
+                              <button
+                                className="btn btn-sm border-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setEvents(events.filter(e => e.id !== event.id))
+                                }}
+                                style={{ padding: '4px 8px' }}
+                              >
+                                <TrashIcon style={{ width: '16px', height: '16px', color: '#ff3b30' }} />
+                              </button>
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        ))
+                      ) : (
+                        <div className="p-5 text-center">
+                          <p className="text-muted mb-0">No events scheduled for this day</p>
+                          <button
+                            className="btn btn-link mt-2 p-0"
+                            onClick={() => {
+                              setEditingEvent(null)
+                              setShowEventModal(true)
+                            }}
+                            style={{ color: '#007AFF', textDecoration: 'none', fontSize: '0.875rem' }}
+                          >
+                            Create new event
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -523,15 +525,24 @@ export default function Dashboard() {
 
             {/* Mailbox View */}
             {activeView === 'mailbox' && (
-              <div className="row">
-                <div className="col-md-4 mb-4 mb-md-0">
-                  <div className="card border-0 shadow-sm" style={{ borderRadius: '16px', height: '600px' }}>
+              <div className="row g-3">
+                <div className="col-12 col-md-4 mb-2 mb-md-0">
+                  <div className="card border-0 shadow-sm" style={{ borderRadius: '12px', height: 'calc(100vh - 250px)', minHeight: '400px' }}>
                     <div className="card-header bg-white border-0 p-3">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h5 className="mb-0 fw-bold" style={{ color: '#14432A' }}>Inbox</h5>
-                        <button className="btn btn-primary btn-sm">
-                          <PlusIcon style={{ width: '16px', height: '16px' }} />
-                        </button>
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => setShowCallModal(true)}
+                            style={{ background: '#007AFF', color: 'white', border: 'none' }}
+                          >
+                            <PhoneIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                          <button className="btn btn-primary btn-sm">
+                            <PlusIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
                       </div>
                       <input
                         type="text"
@@ -586,8 +597,8 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="col-md-8">
-                  <div className="card border-0 shadow-sm" style={{ borderRadius: '16px', minHeight: '600px' }}>
+                <div className="col-12 col-md-8">
+                  <div className="card border-0 shadow-sm" style={{ borderRadius: '12px', minHeight: '400px' }}>
                     {selectedMail ? (
                       <div className="card-body p-4">
                         <div className="d-flex justify-content-between align-items-start mb-4">
