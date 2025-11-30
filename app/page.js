@@ -16,7 +16,14 @@ import {
   CurrencyDollarIcon,
   ChartBarIcon,
   Cog6ToothIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  PhoneIcon,
+  XMarkIcon,
+  PencilIcon,
+  TrashIcon,
+  HeartIcon,
+  ChatBubbleLeftIcon,
+  ShareIcon
 } from '@heroicons/react/24/outline'
 import {
   CalendarIcon as CalendarIconSolid,
@@ -34,6 +41,11 @@ export default function Dashboard() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [selectedMail, setSelectedMail] = useState(null)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showCallModal, setShowCallModal] = useState(false)
+  const [calendarView, setCalendarView] = useState('month') // 'day', 'week', 'month'
+  const [showEventModal, setShowEventModal] = useState(false)
+  const [editingEvent, setEditingEvent] = useState(null)
+  const [currentShortIndex, setCurrentShortIndex] = useState(0)
 
   useEffect(() => {
     // Set default user if not logged in
@@ -48,13 +60,14 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Sample calendar events
-  const events = [
-    { id: 1, date: new Date(2025, 0, 15), title: 'Team Meeting', time: '10:00 AM', type: 'meeting' },
-    { id: 2, date: new Date(2025, 0, 18), title: 'Project Deadline', time: '5:00 PM', type: 'deadline' },
-    { id: 3, date: new Date(2025, 0, 20), title: 'Client Call', time: '2:00 PM', type: 'call' },
-    { id: 4, date: new Date(2025, 0, 22), title: 'Workshop', time: '9:00 AM', type: 'workshop' },
-  ]
+  // Sample calendar events with more details
+  const [events, setEvents] = useState([
+    { id: 1, date: new Date(2025, 0, 15), title: 'Team Meeting', time: '10:00 AM', endTime: '11:00 AM', type: 'meeting', color: '#007AFF', location: 'Conference Room A', notes: 'Quarterly planning session' },
+    { id: 2, date: new Date(2025, 0, 18), title: 'Project Deadline', time: '5:00 PM', endTime: '5:00 PM', type: 'deadline', color: '#FF3B30', location: '', notes: 'Submit final report' },
+    { id: 3, date: new Date(2025, 0, 20), title: 'Client Call', time: '2:00 PM', endTime: '3:00 PM', type: 'call', color: '#34C759', location: 'Zoom', notes: 'Discuss project requirements' },
+    { id: 4, date: new Date(2025, 0, 22), title: 'Workshop', time: '9:00 AM', endTime: '12:00 PM', type: 'workshop', color: '#FF9500', location: 'Training Center', notes: 'Team building workshop' },
+    { id: 5, date: new Date(2025, 0, 16), title: 'Lunch Meeting', time: '12:00 PM', endTime: '1:00 PM', type: 'meeting', color: '#007AFF', location: 'Restaurant', notes: 'Discuss partnership' },
+  ])
 
   // Sample mailbox messages
   const messages = [
@@ -65,12 +78,13 @@ export default function Dashboard() {
     { id: 5, from: 'David Wilson', subject: 'Report Ready', preview: 'The quarterly report is ready for review...', time: '3 days ago', unread: false, important: true },
   ]
 
-  // Sample For You feed items
-  const feedItems = [
-    { id: 1, type: 'article', title: '10 Tips for Better Productivity', author: 'Jane Doe', time: '2 hours ago', image: null, likes: 245, comments: 32 },
-    { id: 2, type: 'update', title: 'New Feature Released', author: 'Product Team', time: '5 hours ago', image: null, likes: 189, comments: 45 },
-    { id: 3, type: 'tip', title: 'Weekly Productivity Tip', author: 'Expert Team', time: '1 day ago', image: null, likes: 312, comments: 67 },
-    { id: 4, type: 'news', title: 'Industry News Update', author: 'News Team', time: '2 days ago', image: null, likes: 156, comments: 23 },
+  // Sample For You feed items (YouTube Shorts style)
+  const shortsItems = [
+    { id: 1, title: 'Market Update: Q1 2025 Outlook', author: 'Financial Advisor', time: '2 hours ago', likes: 1245, comments: 132, shares: 89, videoUrl: null, thumbnail: null },
+    { id: 2, title: 'Investment Strategies for Beginners', author: 'Investment Expert', time: '5 hours ago', likes: 2189, comments: 245, shares: 156, videoUrl: null, thumbnail: null },
+    { id: 3, title: 'Real Estate Market Trends', author: 'Real Estate Pro', time: '1 day ago', likes: 3312, comments: 367, shares: 234, videoUrl: null, thumbnail: null },
+    { id: 4, title: 'Tax Planning Tips 2025', author: 'Tax Specialist', time: '2 days ago', likes: 2156, comments: 223, shares: 145, videoUrl: null, thumbnail: null },
+    { id: 5, title: 'Retirement Planning Guide', author: 'Retirement Advisor', time: '3 days ago', likes: 1890, comments: 198, shares: 112, videoUrl: null, thumbnail: null },
   ]
 
   // Sample wallet transactions
@@ -93,11 +107,12 @@ export default function Dashboard() {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   const getEventsForDate = (date) => {
-    return events.filter(e => 
-      e.date.getDate() === date &&
-      e.date.getMonth() === currentMonth &&
-      e.date.getFullYear() === currentYear
-    )
+    return events.filter(e => {
+      const eventDate = new Date(e.date)
+      return eventDate.getDate() === date &&
+        eventDate.getMonth() === currentMonth &&
+        eventDate.getFullYear() === currentYear
+    })
   }
 
   const navigateMonth = (direction) => {
@@ -155,6 +170,13 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="d-flex align-items-center gap-3">
+              <button
+                className="btn btn-outline-secondary border-0 position-relative"
+                onClick={() => setShowCallModal(true)}
+                style={{ background: '#007AFF', color: 'white' }}
+              >
+                <PhoneIcon style={{ width: '24px', height: '24px' }} />
+              </button>
               <button className="btn btn-outline-secondary border-0 position-relative">
                 <BellIcon style={{ width: '24px', height: '24px' }} />
                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
@@ -296,139 +318,204 @@ export default function Dashboard() {
 
           {/* Main Content Area */}
           <div className="col-md-9 col-lg-10">
-            {/* Calendar View */}
+            {/* Calendar View - Apple Style */}
             {activeView === 'calendar' && (
-              <div>
-                <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
-                  <div className="card-header bg-white border-0 p-4">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h5 className="mb-0 fw-bold" style={{ color: '#14432A' }}>
-                        {monthNames[currentMonth]} {currentYear}
-                      </h5>
-                      <div className="d-flex gap-2">
-                        <button
-                          className="btn btn-outline-secondary border-0"
-                          onClick={() => navigateMonth('prev')}
-                        >
-                          <ArrowLeftIcon style={{ width: '20px', height: '20px' }} />
-                        </button>
-                        <button
-                          className="btn btn-outline-secondary border-0"
-                          onClick={() => {
-                            setCurrentMonth(new Date().getMonth())
-                            setCurrentYear(new Date().getFullYear())
-                          }}
-                        >
-                          Today
-                        </button>
-                        <button
-                          className="btn btn-outline-secondary border-0"
-                          onClick={() => navigateMonth('next')}
-                        >
-                          <ArrowRightIcon style={{ width: '20px', height: '20px' }} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card-body p-4">
-                    <div className="row g-0">
-                      {dayNames.map(day => (
-                        <div key={day} className="col text-center fw-bold p-2" style={{ color: '#14432A' }}>
-                          {day}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="row g-0">
-                      {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-                        <div key={`empty-${idx}`} className="col" style={{ aspectRatio: '1', padding: '4px' }}></div>
-                      ))}
-                      {Array.from({ length: daysInMonth }).map((_, idx) => {
-                        const date = idx + 1
-                        const dayEvents = getEventsForDate(date)
-                        const isToday = date === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
-                        return (
-                          <div
-                            key={date}
-                            className="col position-relative"
-                            style={{
-                              aspectRatio: '1',
-                              padding: '4px',
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => setSelectedDate(new Date(currentYear, currentMonth, date))}
+              <div className="row g-0">
+                {/* Left Side - Mini Calendar */}
+                <div className="col-lg-4 pe-lg-3 mb-4 mb-lg-0">
+                  <div className="card border-0 shadow-sm" style={{ borderRadius: '12px', background: '#f8f9fa' }}>
+                    <div className="card-body p-4">
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h5 className="mb-0 fw-bold" style={{ fontSize: '1.1rem', color: '#1d1d1f' }}>
+                          {monthNames[currentMonth]} {currentYear}
+                        </h5>
+                        <div className="d-flex gap-1">
+                          <button
+                            className="btn btn-sm border-0"
+                            onClick={() => navigateMonth('prev')}
+                            style={{ background: 'white', padding: '4px 8px' }}
                           >
+                            <ArrowLeftIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                          <button
+                            className="btn btn-sm border-0"
+                            onClick={() => {
+                              setCurrentMonth(new Date().getMonth())
+                              setCurrentYear(new Date().getFullYear())
+                              setSelectedDate(new Date())
+                            }}
+                            style={{ background: 'white', padding: '4px 8px', fontSize: '0.75rem' }}
+                          >
+                            Today
+                          </button>
+                          <button
+                            className="btn btn-sm border-0"
+                            onClick={() => navigateMonth('next')}
+                            style={{ background: 'white', padding: '4px 8px' }}
+                          >
+                            <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="row g-0 mb-2">
+                        {dayNames.map(day => (
+                          <div key={day} className="col text-center" style={{ fontSize: '0.75rem', color: '#86868b', padding: '4px 0', fontWeight: '500' }}>
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="row g-0">
+                        {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+                          <div key={`empty-${idx}`} className="col" style={{ aspectRatio: '1', padding: '2px' }}></div>
+                        ))}
+                        {Array.from({ length: daysInMonth }).map((_, idx) => {
+                          const date = idx + 1
+                          const dayEvents = getEventsForDate(date)
+                          const isToday = date === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
+                          const isSelected = selectedDate.getDate() === date && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear
+                          return (
                             <div
-                              className={`d-flex flex-column h-100 p-2 ${isToday ? 'bg-primary text-white rounded' : ''}`}
-                              style={{
-                                border: isToday ? 'none' : '1px solid #e9ecef',
-                                borderRadius: isToday ? '8px' : '4px',
-                                backgroundColor: isToday ? '#14432A' : 'white'
-                              }}
+                              key={date}
+                              className="col position-relative"
+                              style={{ aspectRatio: '1', padding: '2px', cursor: 'pointer' }}
+                              onClick={() => setSelectedDate(new Date(currentYear, currentMonth, date))}
                             >
-                              <span className={`fw-bold ${isToday ? 'text-white' : ''}`}>{date}</span>
+                              <div
+                                className="d-flex align-items-center justify-content-center h-100 rounded"
+                                style={{
+                                  background: isToday ? '#007AFF' : isSelected ? '#e5e5ea' : 'transparent',
+                                  color: isToday ? 'white' : isSelected ? '#1d1d1f' : '#1d1d1f',
+                                  fontWeight: isToday || isSelected ? '600' : '400',
+                                  fontSize: '0.875rem'
+                                }}
+                              >
+                                {date}
+                              </div>
                               {dayEvents.length > 0 && (
-                                <div className="mt-auto">
-                                  {dayEvents.slice(0, 2).map(event => (
+                                <div className="position-absolute bottom-0 start-50 translate-middle-x d-flex gap-1" style={{ transform: 'translateX(-50%)' }}>
+                                  {dayEvents.slice(0, 3).map(event => (
                                     <div
                                       key={event.id}
-                                      className="small mb-1 p-1 rounded text-truncate"
                                       style={{
-                                        backgroundColor: isToday ? 'rgba(255,255,255,0.2)' : '#e3f2fd',
-                                        fontSize: '0.7rem'
+                                        width: '4px',
+                                        height: '4px',
+                                        borderRadius: '50%',
+                                        backgroundColor: event.color || '#007AFF'
                                       }}
-                                    >
-                                      {event.title}
-                                    </div>
+                                    ></div>
                                   ))}
-                                  {dayEvents.length > 2 && (
-                                    <div className="small text-muted">+{dayEvents.length - 2} more</div>
-                                  )}
                                 </div>
                               )}
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
+                      <button
+                        className="btn w-100 mt-3 d-flex align-items-center justify-content-center gap-2"
+                        onClick={() => {
+                          setEditingEvent(null)
+                          setShowEventModal(true)
+                        }}
+                        style={{
+                          background: '#007AFF',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '8px',
+                          fontSize: '0.875rem',
+                          fontWeight: '500'
+                        }}
+                      >
+                        <PlusIcon style={{ width: '16px', height: '16px' }} />
+                        New Event
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Upcoming Events */}
-                <div className="card border-0 shadow-sm" style={{ borderRadius: '16px' }}>
-                  <div className="card-header bg-white border-0 p-4">
-                    <h5 className="mb-0 fw-bold" style={{ color: '#14432A' }}>Upcoming Events</h5>
-                  </div>
-                  <div className="card-body p-4">
-                    {events
-                      .filter(e => e.date >= new Date())
-                      .sort((a, b) => a.date - b.date)
-                      .slice(0, 5)
-                      .map(event => (
-                        <div key={event.id} className="d-flex align-items-start gap-3 mb-3 pb-3 border-bottom">
-                          <div
-                            className="rounded d-flex align-items-center justify-content-center"
-                            style={{
-                              width: '50px',
-                              height: '50px',
-                              backgroundColor: '#e3f2fd',
-                              color: '#14432A',
-                              flexShrink: 0
-                            }}
-                          >
-                            <CalendarIcon style={{ width: '24px', height: '24px' }} />
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 fw-bold">{event.title}</h6>
-                            <div className="d-flex align-items-center gap-2 text-muted small">
-                              <ClockIcon style={{ width: '16px', height: '16px' }} />
-                              {event.date.toLocaleDateString()} at {event.time}
+                {/* Right Side - Event List */}
+                <div className="col-lg-8">
+                  <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
+                    <div className="card-body p-0">
+                      <div className="p-4 border-bottom">
+                        <h5 className="mb-0 fw-bold" style={{ fontSize: '1.1rem', color: '#1d1d1f' }}>
+                          {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </h5>
+                      </div>
+                      <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                        {getEventsForDate(selectedDate.getDate()).length > 0 ? (
+                          getEventsForDate(selectedDate.getDate()).map(event => (
+                            <div
+                              key={event.id}
+                              className="p-4 border-bottom d-flex align-items-start gap-3"
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => {
+                                setEditingEvent(event)
+                                setShowEventModal(true)
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: '12px',
+                                  height: '12px',
+                                  borderRadius: '50%',
+                                  backgroundColor: event.color || '#007AFF',
+                                  marginTop: '6px',
+                                  flexShrink: 0
+                                }}
+                              ></div>
+                              <div className="flex-grow-1">
+                                <h6 className="mb-1 fw-bold" style={{ fontSize: '1rem', color: '#1d1d1f' }}>{event.title}</h6>
+                                <div className="d-flex align-items-center gap-3 text-muted" style={{ fontSize: '0.875rem' }}>
+                                  <span>{event.time} - {event.endTime}</span>
+                                  {event.location && <span>• {event.location}</span>}
+                                </div>
+                                {event.notes && (
+                                  <p className="mb-0 mt-2 text-muted" style={{ fontSize: '0.875rem' }}>{event.notes}</p>
+                                )}
+                              </div>
+                              <div className="d-flex gap-2">
+                                <button
+                                  className="btn btn-sm border-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEditingEvent(event)
+                                    setShowEventModal(true)
+                                  }}
+                                  style={{ padding: '4px 8px' }}
+                                >
+                                  <PencilIcon style={{ width: '16px', height: '16px', color: '#86868b' }} />
+                                </button>
+                                <button
+                                  className="btn btn-sm border-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEvents(events.filter(e => e.id !== event.id))
+                                  }}
+                                  style={{ padding: '4px 8px' }}
+                                >
+                                  <TrashIcon style={{ width: '16px', height: '16px', color: '#ff3b30' }} />
+                                </button>
+                              </div>
                             </div>
+                          ))
+                        ) : (
+                          <div className="p-5 text-center">
+                            <p className="text-muted mb-0">No events scheduled for this day</p>
+                            <button
+                              className="btn btn-link mt-2 p-0"
+                              onClick={() => {
+                                setEditingEvent(null)
+                                setShowEventModal(true)
+                              }}
+                              style={{ color: '#007AFF', textDecoration: 'none', fontSize: '0.875rem' }}
+                            >
+                              Create new event
+                            </button>
                           </div>
-                        </div>
-                      ))}
-                    {events.filter(e => e.date >= new Date()).length === 0 && (
-                      <p className="text-muted text-center py-4">No upcoming events</p>
-                    )}
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -544,62 +631,108 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* For You Feed View */}
+            {/* For You Feed View - YouTube Shorts Style */}
             {activeView === 'foryou' && (
-              <div>
-                <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
-                  <div className="card-header bg-white border-0 p-4">
-                    <h5 className="mb-0 fw-bold" style={{ color: '#14432A' }}>For You</h5>
-                    <p className="text-muted small mb-0 mt-2">Personalized content just for you</p>
-                  </div>
-                </div>
-                <div className="row g-4">
-                  {feedItems.map(item => (
-                    <div key={item.id} className="col-md-6">
-                      <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                        <div className="card-body p-4">
-                          <div className="d-flex align-items-start gap-3 mb-3">
+              <div style={{ height: 'calc(100vh - 200px)', overflow: 'hidden', position: 'relative' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    overflowY: 'auto',
+                    scrollSnapType: 'y mandatory',
+                    scrollBehavior: 'smooth'
+                  }}
+                  onScroll={(e) => {
+                    const scrollTop = e.target.scrollTop
+                    const itemHeight = e.target.clientHeight
+                    const newIndex = Math.round(scrollTop / itemHeight)
+                    if (newIndex !== currentShortIndex && newIndex >= 0 && newIndex < shortsItems.length) {
+                      setCurrentShortIndex(newIndex)
+                    }
+                  }}
+                >
+                  {shortsItems.map((item, index) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        height: '100%',
+                        minHeight: 'calc(100vh - 200px)',
+                        scrollSnapAlign: 'start',
+                        position: 'relative',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white'
+                      }}
+                    >
+                      {/* Content Card */}
+                      <div className="container" style={{ maxWidth: '600px', padding: '2rem' }}>
+                        <div className="card border-0 shadow-lg" style={{ borderRadius: '20px', background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)' }}>
+                          <div className="card-body p-4">
+                            <div className="d-flex align-items-start gap-3 mb-3">
+                              <div
+                                style={{
+                                  width: '50px',
+                                  height: '50px',
+                                  borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, #14432A 0%, #1a5436 100%)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'white',
+                                  fontWeight: 'bold',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {item.author.substring(0, 2).toUpperCase()}
+                              </div>
+                              <div className="flex-grow-1">
+                                <h5 className="fw-bold mb-1" style={{ color: '#1d1d1f' }}>{item.title}</h5>
+                                <div className="d-flex align-items-center gap-2 text-muted small mb-2">
+                                  <span>{item.author}</span>
+                                  <span>•</span>
+                                  <span>{item.time}</span>
+                                </div>
+                              </div>
+                            </div>
                             <div
                               style={{
-                                width: '50px',
-                                height: '50px',
-                                borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #14432A 0%, #1a5436 100%)',
+                                height: '300px',
+                                background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                                borderRadius: '12px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                flexShrink: 0
+                                marginBottom: '1rem'
                               }}
                             >
-                              {item.author.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div className="flex-grow-1">
-                              <h6 className="fw-bold mb-1" style={{ color: '#14432A' }}>{item.title}</h6>
-                              <div className="d-flex align-items-center gap-2 text-muted small mb-2">
-                                <span>{item.author}</span>
-                                <span>•</span>
-                                <span>{item.time}</span>
+                              <div className="text-center">
+                                <SparklesIcon style={{ width: '64px', height: '64px', color: '#86868b', marginBottom: '1rem' }} />
+                                <p className="text-muted mb-0">Video Content</p>
                               </div>
-                              <span className="badge" style={{ backgroundColor: 'rgba(20, 67, 42, 0.1)', color: '#14432A' }}>
-                                {item.type}
-                              </span>
                             </div>
-                          </div>
-                          <p className="text-muted small mb-3">
-                            This is a sample preview of the content. Click to read more about {item.title.toLowerCase()} and discover valuable insights...
-                          </p>
-                          <div className="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <div className="d-flex gap-3">
-                              <button className="btn btn-sm btn-outline-secondary border-0">
-                                <span className="me-1">👍</span> {item.likes}
-                              </button>
-                              <button className="btn btn-sm btn-outline-secondary border-0">
-                                <span className="me-1">💬</span> {item.comments}
+                            <p className="text-muted mb-4" style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
+                              Watch this informative content about {item.title.toLowerCase()}. Get expert insights and valuable information to help you make better decisions.
+                            </p>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div className="d-flex gap-3">
+                                <button className="btn btn-outline-secondary border-0 d-flex flex-column align-items-center gap-1" style={{ padding: '8px 12px' }}>
+                                  <HeartIcon style={{ width: '20px', height: '20px' }} />
+                                  <span style={{ fontSize: '0.75rem' }}>{item.likes > 1000 ? `${(item.likes / 1000).toFixed(1)}K` : item.likes}</span>
+                                </button>
+                                <button className="btn btn-outline-secondary border-0 d-flex flex-column align-items-center gap-1" style={{ padding: '8px 12px' }}>
+                                  <ChatBubbleLeftIcon style={{ width: '20px', height: '20px' }} />
+                                  <span style={{ fontSize: '0.75rem' }}>{item.comments > 1000 ? `${(item.comments / 1000).toFixed(1)}K` : item.comments}</span>
+                                </button>
+                                <button className="btn btn-outline-secondary border-0 d-flex flex-column align-items-center gap-1" style={{ padding: '8px 12px' }}>
+                                  <ShareIcon style={{ width: '20px', height: '20px' }} />
+                                  <span style={{ fontSize: '0.75rem' }}>{item.shares > 1000 ? `${(item.shares / 1000).toFixed(1)}K` : item.shares}</span>
+                                </button>
+                              </div>
+                              <button className="btn" style={{ background: '#007AFF', color: 'white', border: 'none', borderRadius: '20px', padding: '8px 20px' }}>
+                                Watch Now
                               </button>
                             </div>
-                            <button className="btn btn-sm btn-primary">Read More</button>
                           </div>
                         </div>
                       </div>
@@ -818,6 +951,213 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Call Broker Modal */}
+      {showCallModal && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+          onClick={() => setShowCallModal(false)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content border-0" style={{ borderRadius: '20px' }}>
+              <div className="modal-header border-0 p-4">
+                <h5 className="modal-title fw-bold" style={{ color: '#1d1d1f' }}>Call Your Broker</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowCallModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="text-center mb-4">
+                  <div
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 20px'
+                    }}
+                  >
+                    <PhoneIcon style={{ width: '50px', height: '50px', color: 'white' }} />
+                  </div>
+                  <h4 className="fw-bold mb-2" style={{ color: '#1d1d1f' }}>John Smith</h4>
+                  <p className="text-muted mb-1">Financial Advisor</p>
+                  <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>Centuries Mutual</p>
+                </div>
+                <div className="mb-4">
+                  <div className="d-flex align-items-center justify-content-between p-3 border rounded mb-2" style={{ borderRadius: '12px' }}>
+                    <div>
+                      <p className="mb-0 fw-bold" style={{ fontSize: '0.875rem' }}>Phone</p>
+                      <p className="mb-0 text-muted" style={{ fontSize: '0.875rem' }}>+1 (555) 123-4567</p>
+                    </div>
+                    <a href="tel:+15551234567" className="btn" style={{ background: '#007AFF', color: 'white', borderRadius: '12px' }}>
+                      <PhoneIcon style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+                      Call Now
+                    </a>
+                  </div>
+                  <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ borderRadius: '12px' }}>
+                    <div>
+                      <p className="mb-0 fw-bold" style={{ fontSize: '0.875rem' }}>Email</p>
+                      <p className="mb-0 text-muted" style={{ fontSize: '0.875rem' }}>john.smith@centuriesmutual.com</p>
+                    </div>
+                    <a href="mailto:john.smith@centuriesmutual.com" className="btn btn-outline-secondary" style={{ borderRadius: '12px' }}>
+                      Email
+                    </a>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-muted small mb-0">Available Monday - Friday, 9 AM - 5 PM EST</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event Modal */}
+      {showEventModal && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+          onClick={() => {
+            setShowEventModal(false)
+            setEditingEvent(null)
+          }}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content border-0" style={{ borderRadius: '20px' }}>
+              <div className="modal-header border-0 p-4">
+                <h5 className="modal-title fw-bold" style={{ color: '#1d1d1f' }}>
+                  {editingEvent ? 'Edit Event' : 'New Event'}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowEventModal(false)
+                    setEditingEvent(null)
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="mb-3">
+                  <label className="form-label small fw-bold">Title</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    defaultValue={editingEvent?.title || ''}
+                    placeholder="Event title"
+                  />
+                </div>
+                <div className="row g-3 mb-3">
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">Start Time</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      defaultValue={editingEvent?.time || ''}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">End Time</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      defaultValue={editingEvent?.endTime || ''}
+                    />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label small fw-bold">Location</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    defaultValue={editingEvent?.location || ''}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label small fw-bold">Notes</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    defaultValue={editingEvent?.notes || ''}
+                    placeholder="Optional"
+                  ></textarea>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label small fw-bold">Color</label>
+                  <div className="d-flex gap-2">
+                    {['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#FF2D55'].map(color => (
+                      <button
+                        key={color}
+                        className="btn border"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          backgroundColor: color,
+                          border: editingEvent?.color === color ? '3px solid #1d1d1f' : '1px solid #e5e5ea'
+                        }}
+                        onClick={() => {
+                          if (editingEvent) {
+                            setEditingEvent({ ...editingEvent, color })
+                          }
+                        }}
+                      ></button>
+                    ))}
+                  </div>
+                </div>
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn btn-secondary flex-grow-1"
+                    onClick={() => {
+                      setShowEventModal(false)
+                      setEditingEvent(null)
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn flex-grow-1"
+                    style={{ background: '#007AFF', color: 'white' }}
+                    onClick={() => {
+                      // In a real app, you would save the event here
+                      setShowEventModal(false)
+                      setEditingEvent(null)
+                    }}
+                  >
+                    {editingEvent ? 'Save Changes' : 'Create Event'}
+                  </button>
+                  {editingEvent && (
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => {
+                        setEvents(events.filter(e => e.id !== editingEvent.id))
+                        setShowEventModal(false)
+                        setEditingEvent(null)
+                      }}
+                    >
+                      <TrashIcon style={{ width: '20px', height: '20px' }} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
