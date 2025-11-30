@@ -38,13 +38,17 @@ export default function Dashboard() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   useEffect(() => {
+    // Set default user if not logged in
     const userData = localStorage.getItem('user')
-    if (!userData) {
-      router.push('/login')
-      return
+    if (userData) {
+      setUser(JSON.parse(userData))
+    } else {
+      // Set a default user so dashboard works without login
+      const defaultUser = { email: 'user@example.com', loggedIn: true, timestamp: Date.now() }
+      localStorage.setItem('user', JSON.stringify(defaultUser))
+      setUser(defaultUser)
     }
-    setUser(JSON.parse(userData))
-  }, [router])
+  }, [])
 
   // Sample calendar events
   const events = [
@@ -117,8 +121,11 @@ export default function Dashboard() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('user')
-    router.push('/login')
+    // Reset to default user instead of redirecting
+    const defaultUser = { email: 'user@example.com', loggedIn: true, timestamp: Date.now() }
+    localStorage.setItem('user', JSON.stringify(defaultUser))
+    setUser(defaultUser)
+    setShowProfileMenu(false)
   }
 
   if (!user) {

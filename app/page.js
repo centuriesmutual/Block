@@ -7,7 +7,7 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    router.push('/login')
+    router.push('/dashboard')
   }, [router])
 
   return (
@@ -16,7 +16,7 @@ export default function Home() {
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="mt-3 text-muted">Redirecting to login...</p>
+        <p className="mt-3 text-muted">Loading dashboard...</p>
       </div>
     </div>
   )
