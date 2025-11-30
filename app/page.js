@@ -1,34 +1,24 @@
-import Hero from '../components/Hero'
-import BlockchainSection from '../components/BlockchainSection'
-import RealEstate from '../components/RealEstate'
-import PaymentTech from '../components/PaymentTech'
-import NetworkTechnology from '../components/NetworkTechnology'
-import NetworkDevices from '../components/NetworkDevices'
-import SmartHomeSecurity from '../components/SmartHomeSecurity'
-import Community from '../components/Community'
-import Legacy from '../components/Legacy'
-import CTA from '../components/CTA'
-import Footer from '../components/Footer'
-import Navbar from '../components/Navbar'
-import Link from 'next/link'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
+  const router = useRouter()
+
+  useEffect(() => {
+    router.push('/login')
+  }, [router])
+
   return (
-    <>
-      <Navbar />
-      <main>
-        <Hero />
-        <BlockchainSection />
-        <RealEstate />
-        <Community />
-        <PaymentTech />
-        <NetworkTechnology />
-        <NetworkDevices />
-        <SmartHomeSecurity />
-        <Legacy />
-        <CTA />
-        <Footer />
-      </main>
-    </>
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+      <div className="text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-3 text-muted">Redirecting to login...</p>
+      </div>
+    </div>
   )
-} 
+}
+

@@ -50,15 +50,6 @@ export default function Login() {
       <div className="container flex-grow-1 d-flex align-items-center justify-content-center">
         <div className="row justify-content-center w-100">
           <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
-            {/* Back to Home Button */}
-            <div className="mb-3">
-              <Link href="/" className="btn btn-outline-secondary btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left me-2" viewBox="0 0 16 16">
-                  <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                </svg>
-                Back to Home
-              </Link>
-            </div>
             <div className="card border-0 shadow-sm">
               {/* Card Header with Logo */}
               <div className="card-header bg-white border-0 text-center pt-4 pb-2">
@@ -171,12 +162,6 @@ export default function Login() {
                     Don't have an account? {' '}
                     <Link href="/signup" className="text-decoration-none" style={{ color: '#14432A', fontWeight: '500' }}>
                       Sign Up
-                    </Link>
-                  </p>
-                  <p className="text-muted small mb-0">
-                    Need help? {' '}
-                    <Link href="/contact" className="text-decoration-none" style={{ color: '#14432A' }}>
-                      Contact Us
                     </Link>
                   </p>
                 </div>
