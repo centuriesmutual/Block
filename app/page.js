@@ -78,6 +78,15 @@ export default function Dashboard() {
 
   // Load events from Supabase
   const loadEvents = async () => {
+    if (!supabase) {
+      // If Supabase is not configured, use sample data
+      setEvents([
+        { id: 1, date: new Date(2025, 0, 15), title: 'Team Meeting', time: '10:00 AM', endTime: '11:00 AM', type: 'meeting', color: '#007AFF', location: 'Conference Room A', notes: 'Quarterly planning session' },
+        { id: 2, date: new Date(2025, 0, 18), title: 'Project Deadline', time: '5:00 PM', endTime: '5:00 PM', type: 'deadline', color: '#FF3B30', location: '', notes: 'Submit final report' },
+      ])
+      return
+    }
+
     try {
       setLoadingEvents(true)
       const { data, error } = await supabase
@@ -102,6 +111,11 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error loading events:', error)
+      // Use sample data on error
+      setEvents([
+        { id: 1, date: new Date(2025, 0, 15), title: 'Team Meeting', time: '10:00 AM', endTime: '11:00 AM', type: 'meeting', color: '#007AFF', location: 'Conference Room A', notes: 'Quarterly planning session' },
+        { id: 2, date: new Date(2025, 0, 18), title: 'Project Deadline', time: '5:00 PM', endTime: '5:00 PM', type: 'deadline', color: '#FF3B30', location: '', notes: 'Submit final report' },
+      ])
     } finally {
       setLoadingEvents(false)
     }
@@ -109,6 +123,39 @@ export default function Dashboard() {
 
   // Save event to Supabase
   const saveEvent = async (eventData) => {
+    if (!supabase) {
+      // If Supabase is not configured, save to local state only
+      const newEvent = {
+        id: editingEvent?.id || Date.now(),
+        title: eventData.title,
+        date: selectedDate,
+        time: eventData.time,
+        endTime: eventData.endTime,
+        location: eventData.location || '',
+        notes: eventData.notes || '',
+        color: eventData.color || '#007AFF',
+        type: eventData.type || 'meeting'
+      }
+
+      if (editingEvent && editingEvent.id) {
+        setEvents(events.map(e => e.id === editingEvent.id ? newEvent : e))
+      } else {
+        setEvents([...events, newEvent])
+      }
+
+      setShowEventModal(false)
+      setEditingEvent(null)
+      setEventFormData({
+        title: '',
+        time: '',
+        endTime: '',
+        location: '',
+        notes: '',
+        color: '#007AFF'
+      })
+      return
+    }
+
     try {
       const eventToSave = {
         title: eventData.title,
@@ -170,6 +217,14 @@ export default function Dashboard() {
 
   // Delete event from Supabase
   const deleteEvent = async (eventId) => {
+    if (!supabase) {
+      // If Supabase is not configured, delete from local state only
+      setEvents(events.filter(e => e.id !== eventId))
+      setShowEventModal(false)
+      setEditingEvent(null)
+      return
+    }
+
     try {
       const { error } = await supabase
         .from('events')
