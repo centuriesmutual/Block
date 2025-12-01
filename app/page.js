@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 import {
   CalendarIcon,
   EnvelopeIcon,
@@ -46,6 +47,18 @@ export default function Dashboard() {
   const [showEventModal, setShowEventModal] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [currentShortIndex, setCurrentShortIndex] = useState(0)
+  const [eventFormData, setEventFormData] = useState({
+    title: '',
+    time: '',
+    endTime: '',
+    location: '',
+    notes: '',
+    color: '#007AFF'
+  })
+  const [loadingEvents, setLoadingEvents] = useState(false)
+
+  // Calendar events state
+  const [events, setEvents] = useState([])
 
   useEffect(() => {
     // Set default user if not logged in
@@ -58,16 +71,122 @@ export default function Dashboard() {
       localStorage.setItem('user', JSON.stringify(defaultUser))
       setUser(defaultUser)
     }
+    
+    // Load events from Supabase
+    loadEvents()
   }, [])
 
-  // Sample calendar events with more details
-  const [events, setEvents] = useState([
-    { id: 1, date: new Date(2025, 0, 15), title: 'Team Meeting', time: '10:00 AM', endTime: '11:00 AM', type: 'meeting', color: '#007AFF', location: 'Conference Room A', notes: 'Quarterly planning session' },
-    { id: 2, date: new Date(2025, 0, 18), title: 'Project Deadline', time: '5:00 PM', endTime: '5:00 PM', type: 'deadline', color: '#FF3B30', location: '', notes: 'Submit final report' },
-    { id: 3, date: new Date(2025, 0, 20), title: 'Client Call', time: '2:00 PM', endTime: '3:00 PM', type: 'call', color: '#34C759', location: 'Zoom', notes: 'Discuss project requirements' },
-    { id: 4, date: new Date(2025, 0, 22), title: 'Workshop', time: '9:00 AM', endTime: '12:00 PM', type: 'workshop', color: '#FF9500', location: 'Training Center', notes: 'Team building workshop' },
-    { id: 5, date: new Date(2025, 0, 16), title: 'Lunch Meeting', time: '12:00 PM', endTime: '1:00 PM', type: 'meeting', color: '#007AFF', location: 'Restaurant', notes: 'Discuss partnership' },
-  ])
+  // Load events from Supabase
+  const loadEvents = async () => {
+    try {
+      setLoadingEvents(true)
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true })
+
+      if (error) {
+        console.error('Error loading events:', error)
+        // If table doesn't exist, use sample data
+        setEvents([
+          { id: 1, date: new Date(2025, 0, 15), title: 'Team Meeting', time: '10:00 AM', endTime: '11:00 AM', type: 'meeting', color: '#007AFF', location: 'Conference Room A', notes: 'Quarterly planning session' },
+          { id: 2, date: new Date(2025, 0, 18), title: 'Project Deadline', time: '5:00 PM', endTime: '5:00 PM', type: 'deadline', color: '#FF3B30', location: '', notes: 'Submit final report' },
+        ])
+      } else if (data) {
+        // Convert date strings to Date objects
+        const formattedEvents = data.map(event => ({
+          ...event,
+          date: new Date(event.date)
+        }))
+        setEvents(formattedEvents)
+      }
+    } catch (error) {
+      console.error('Error loading events:', error)
+    } finally {
+      setLoadingEvents(false)
+    }
+  }
+
+  // Save event to Supabase
+  const saveEvent = async (eventData) => {
+    try {
+      const eventToSave = {
+        title: eventData.title,
+        date: selectedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        time: eventData.time,
+        end_time: eventData.endTime,
+        location: eventData.location || '',
+        notes: eventData.notes || '',
+        color: eventData.color || '#007AFF',
+        type: eventData.type || 'meeting'
+      }
+
+      if (editingEvent && editingEvent.id) {
+        // Update existing event
+        const { data, error } = await supabase
+          .from('events')
+          .update(eventToSave)
+          .eq('id', editingEvent.id)
+          .select()
+
+        if (error) throw error
+
+        // Update local state
+        setEvents(events.map(e => 
+          e.id === editingEvent.id 
+            ? { ...editingEvent, ...eventToSave, date: selectedDate }
+            : e
+        ))
+      } else {
+        // Create new event
+        const { data, error } = await supabase
+          .from('events')
+          .insert([eventToSave])
+          .select()
+
+        if (error) throw error
+
+        // Add to local state
+        if (data && data[0]) {
+          setEvents([...events, { ...data[0], date: selectedDate }])
+        }
+      }
+
+      setShowEventModal(false)
+      setEditingEvent(null)
+      setEventFormData({
+        title: '',
+        time: '',
+        endTime: '',
+        location: '',
+        notes: '',
+        color: '#007AFF'
+      })
+    } catch (error) {
+      console.error('Error saving event:', error)
+      alert('Error saving event. Please try again.')
+    }
+  }
+
+  // Delete event from Supabase
+  const deleteEvent = async (eventId) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId)
+
+      if (error) throw error
+
+      // Update local state
+      setEvents(events.filter(e => e.id !== eventId))
+      setShowEventModal(false)
+      setEditingEvent(null)
+    } catch (error) {
+      console.error('Error deleting event:', error)
+      alert('Error deleting event. Please try again.')
+    }
+  }
 
   // Sample mailbox messages
   const messages = [
@@ -106,12 +225,62 @@ export default function Dashboard() {
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-  const getEventsForDate = (date) => {
+  // Calculate calendar days for 5 rows (35 cells)
+  const getCalendarDays = () => {
+    const days = []
+    const totalCells = 35 // 5 rows × 7 days
+    
+    // Days from previous month
+    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1
+    const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear
+    const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate()
+    
+    // Start from the first day of the month
+    const startDate = firstDayOfMonth
+    
+    // Add previous month days
+    for (let i = startDate - 1; i >= 0; i--) {
+      days.push({
+        date: daysInPrevMonth - i,
+        month: prevMonth,
+        year: prevYear,
+        isCurrentMonth: false
+      })
+    }
+    
+    // Add current month days
+    for (let date = 1; date <= daysInMonth; date++) {
+      days.push({
+        date,
+        month: currentMonth,
+        year: currentYear,
+        isCurrentMonth: true
+      })
+    }
+    
+    // Add next month days to fill 35 cells
+    const remainingCells = totalCells - days.length
+    const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1
+    const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear
+    
+    for (let date = 1; date <= remainingCells; date++) {
+      days.push({
+        date,
+        month: nextMonth,
+        year: nextYear,
+        isCurrentMonth: false
+      })
+    }
+    
+    return days
+  }
+
+  const getEventsForDate = (date, month, year) => {
     return events.filter(e => {
       const eventDate = new Date(e.date)
       return eventDate.getDate() === date &&
-        eventDate.getMonth() === currentMonth &&
-        eventDate.getFullYear() === currentYear
+        eventDate.getMonth() === month &&
+        eventDate.getFullYear() === year
     })
   }
 
@@ -356,6 +525,14 @@ export default function Dashboard() {
                           className="btn btn-sm ms-2"
                           onClick={() => {
                             setEditingEvent(null)
+                            setEventFormData({
+                              title: '',
+                              time: '',
+                              endTime: '',
+                              location: '',
+                              notes: '',
+                              color: '#007AFF'
+                            })
                             setShowEventModal(true)
                           }}
                           style={{
@@ -374,7 +551,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     
-                    {/* Calendar Grid - Wide Symmetrical */}
+                    {/* Calendar Grid - Wide Symmetrical with 5 Rows */}
                     <div className="row g-0 mb-2 mb-md-3">
                       {dayNames.map(day => (
                         <div key={day} className="col text-center fw-semibold" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.875rem)', color: '#86868b', padding: '6px 2px', fontWeight: '500' }}>
@@ -382,58 +559,58 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
-                    <div className="row g-0">
-                      {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-                        <div key={`empty-${idx}`} className="col" style={{ aspectRatio: '1', padding: '2px' }}></div>
-                      ))}
-                      {Array.from({ length: daysInMonth }).map((_, idx) => {
-                        const date = idx + 1
-                        const dayEvents = getEventsForDate(date)
-                        const isToday = date === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
-                        const isSelected = selectedDate.getDate() === date && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear
-                        return (
-                          <div
-                            key={date}
-                            className="col position-relative"
-                            style={{ aspectRatio: '1', padding: '2px', cursor: 'pointer' }}
-                            onClick={() => setSelectedDate(new Date(currentYear, currentMonth, date))}
-                          >
+                    {/* Render 5 rows (35 cells) */}
+                    {Array.from({ length: 5 }).map((_, rowIndex) => (
+                      <div key={rowIndex} className="row g-0">
+                        {getCalendarDays().slice(rowIndex * 7, (rowIndex + 1) * 7).map((day, cellIndex) => {
+                          const dayEvents = getEventsForDate(day.date, day.month, day.year)
+                          const isToday = day.date === new Date().getDate() && day.month === new Date().getMonth() && day.year === new Date().getFullYear()
+                          const isSelected = selectedDate.getDate() === day.date && selectedDate.getMonth() === day.month && selectedDate.getFullYear() === day.year
+                          return (
                             <div
-                              className="d-flex flex-column align-items-center justify-content-center h-100 rounded"
-                              style={{
-                                background: isToday ? '#007AFF' : isSelected ? '#e5e5ea' : 'transparent',
-                                color: isToday ? 'white' : isSelected ? '#1d1d1f' : '#1d1d1f',
-                                fontWeight: isToday || isSelected ? '600' : '400',
-                                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                minHeight: '40px'
-                              }}
+                              key={`${rowIndex}-${cellIndex}`}
+                              className="col position-relative"
+                              style={{ aspectRatio: '1', padding: '2px', cursor: 'pointer' }}
+                              onClick={() => setSelectedDate(new Date(day.year, day.month, day.date))}
                             >
-                              <span>{date}</span>
-                              {dayEvents.length > 0 && (
-                                <div className="d-flex flex-wrap justify-content-center" style={{ maxWidth: '100%', gap: '2px', marginTop: '2px' }}>
-                                  {dayEvents.slice(0, 3).map(event => (
-                                    <div
-                                      key={event.id}
-                                      style={{
-                                        width: '4px',
-                                        height: '4px',
-                                        borderRadius: '50%',
-                                        backgroundColor: event.color || '#007AFF'
-                                      }}
-                                    ></div>
-                                  ))}
-                                  {dayEvents.length > 3 && (
-                                    <span style={{ fontSize: '0.55rem', color: isToday ? 'rgba(255,255,255,0.8)' : '#86868b' }}>
-                                      +{dayEvents.length - 3}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                              <div
+                                className="d-flex flex-column align-items-center justify-content-center h-100 rounded"
+                                style={{
+                                  background: isToday ? '#007AFF' : isSelected ? '#e5e5ea' : 'transparent',
+                                  color: isToday ? 'white' : isSelected ? '#1d1d1f' : day.isCurrentMonth ? '#1d1d1f' : '#86868b',
+                                  fontWeight: isToday || isSelected ? '600' : '400',
+                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                                  minHeight: '40px',
+                                  opacity: day.isCurrentMonth ? 1 : 0.4
+                                }}
+                              >
+                                <span>{day.date}</span>
+                                {dayEvents.length > 0 && day.isCurrentMonth && (
+                                  <div className="d-flex flex-wrap justify-content-center" style={{ maxWidth: '100%', gap: '2px', marginTop: '2px' }}>
+                                    {dayEvents.slice(0, 3).map(event => (
+                                      <div
+                                        key={event.id}
+                                        style={{
+                                          width: '4px',
+                                          height: '4px',
+                                          borderRadius: '50%',
+                                          backgroundColor: event.color || '#007AFF'
+                                        }}
+                                      ></div>
+                                    ))}
+                                    {dayEvents.length > 3 && (
+                                      <span style={{ fontSize: '0.55rem', color: isToday ? 'rgba(255,255,255,0.8)' : '#86868b' }}>
+                                        +{dayEvents.length - 3}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
-                    </div>
+                          )
+                        })}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -446,8 +623,8 @@ export default function Dashboard() {
                       </h5>
                     </div>
                     <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                      {getEventsForDate(selectedDate.getDate()).length > 0 ? (
-                        getEventsForDate(selectedDate.getDate()).map(event => (
+                      {getEventsForDate(selectedDate.getDate(), selectedDate.getMonth(), selectedDate.getFullYear()).length > 0 ? (
+                        getEventsForDate(selectedDate.getDate(), selectedDate.getMonth(), selectedDate.getFullYear()).map(event => (
                           <div
                             key={event.id}
                             className="p-4 border-bottom d-flex align-items-start gap-3"
@@ -493,7 +670,9 @@ export default function Dashboard() {
                                 className="btn btn-sm border-0"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  setEvents(events.filter(e => e.id !== event.id))
+                                  if (window.confirm('Are you sure you want to delete this event?')) {
+                                    deleteEvent(event.id)
+                                  }
                                 }}
                                 style={{ padding: '4px 8px' }}
                               >
@@ -505,16 +684,24 @@ export default function Dashboard() {
                       ) : (
                         <div className="p-5 text-center">
                           <p className="text-muted mb-0">No events scheduled for this day</p>
-                          <button
-                            className="btn btn-link mt-2 p-0"
-                            onClick={() => {
-                              setEditingEvent(null)
-                              setShowEventModal(true)
-                            }}
-                            style={{ color: '#007AFF', textDecoration: 'none', fontSize: '0.875rem' }}
-                          >
-                            Create new event
-                          </button>
+                            <button
+                              className="btn btn-link mt-2 p-0"
+                              onClick={() => {
+                                setEditingEvent(null)
+                                setEventFormData({
+                                  title: '',
+                                  time: '',
+                                  endTime: '',
+                                  location: '',
+                                  notes: '',
+                                  color: '#007AFF'
+                                })
+                                setShowEventModal(true)
+                              }}
+                              style={{ color: '#007AFF', textDecoration: 'none', fontSize: '0.875rem' }}
+                            >
+                              Create new event
+                            </button>
                         </div>
                       )}
                     </div>
@@ -1041,6 +1228,14 @@ export default function Dashboard() {
           onClick={() => {
             setShowEventModal(false)
             setEditingEvent(null)
+            setEventFormData({
+              title: '',
+              time: '',
+              endTime: '',
+              location: '',
+              notes: '',
+              color: '#007AFF'
+            })
           }}
         >
           <div
@@ -1058,6 +1253,14 @@ export default function Dashboard() {
                   onClick={() => {
                     setShowEventModal(false)
                     setEditingEvent(null)
+                    setEventFormData({
+                      title: '',
+                      time: '',
+                      endTime: '',
+                      location: '',
+                      notes: '',
+                      color: '#007AFF'
+                    })
                   }}
                 ></button>
               </div>
@@ -1067,8 +1270,16 @@ export default function Dashboard() {
                   <input
                     type="text"
                     className="form-control"
-                    defaultValue={editingEvent?.title || ''}
+                    value={editingEvent ? (editingEvent.title || '') : eventFormData.title}
+                    onChange={(e) => {
+                      if (editingEvent) {
+                        setEditingEvent({ ...editingEvent, title: e.target.value })
+                      } else {
+                        setEventFormData({ ...eventFormData, title: e.target.value })
+                      }
+                    }}
                     placeholder="Event title"
+                    required
                   />
                 </div>
                 <div className="row g-3 mb-3">
@@ -1077,7 +1288,15 @@ export default function Dashboard() {
                     <input
                       type="time"
                       className="form-control"
-                      defaultValue={editingEvent?.time || ''}
+                      value={editingEvent ? (editingEvent.time || '') : eventFormData.time}
+                      onChange={(e) => {
+                        if (editingEvent) {
+                          setEditingEvent({ ...editingEvent, time: e.target.value })
+                        } else {
+                          setEventFormData({ ...eventFormData, time: e.target.value })
+                        }
+                      }}
+                      required
                     />
                   </div>
                   <div className="col-6">
@@ -1085,7 +1304,15 @@ export default function Dashboard() {
                     <input
                       type="time"
                       className="form-control"
-                      defaultValue={editingEvent?.endTime || ''}
+                      value={editingEvent ? (editingEvent.endTime || '') : eventFormData.endTime}
+                      onChange={(e) => {
+                        if (editingEvent) {
+                          setEditingEvent({ ...editingEvent, endTime: e.target.value })
+                        } else {
+                          setEventFormData({ ...eventFormData, endTime: e.target.value })
+                        }
+                      }}
+                      required
                     />
                   </div>
                 </div>
@@ -1094,7 +1321,14 @@ export default function Dashboard() {
                   <input
                     type="text"
                     className="form-control"
-                    defaultValue={editingEvent?.location || ''}
+                    value={editingEvent ? (editingEvent.location || '') : eventFormData.location}
+                    onChange={(e) => {
+                      if (editingEvent) {
+                        setEditingEvent({ ...editingEvent, location: e.target.value })
+                      } else {
+                        setEventFormData({ ...eventFormData, location: e.target.value })
+                      }
+                    }}
                     placeholder="Optional"
                   />
                 </div>
@@ -1103,7 +1337,14 @@ export default function Dashboard() {
                   <textarea
                     className="form-control"
                     rows="3"
-                    defaultValue={editingEvent?.notes || ''}
+                    value={editingEvent ? (editingEvent.notes || '') : eventFormData.notes}
+                    onChange={(e) => {
+                      if (editingEvent) {
+                        setEditingEvent({ ...editingEvent, notes: e.target.value })
+                      } else {
+                        setEventFormData({ ...eventFormData, notes: e.target.value })
+                      }
+                    }}
                     placeholder="Optional"
                   ></textarea>
                 </div>
@@ -1113,17 +1354,20 @@ export default function Dashboard() {
                     {['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#FF2D55'].map(color => (
                       <button
                         key={color}
+                        type="button"
                         className="btn border"
                         style={{
                           width: '40px',
                           height: '40px',
                           borderRadius: '50%',
                           backgroundColor: color,
-                          border: editingEvent?.color === color ? '3px solid #1d1d1f' : '1px solid #e5e5ea'
+                          border: (editingEvent ? editingEvent.color : eventFormData.color) === color ? '3px solid #1d1d1f' : '1px solid #e5e5ea'
                         }}
                         onClick={() => {
                           if (editingEvent) {
                             setEditingEvent({ ...editingEvent, color })
+                          } else {
+                            setEventFormData({ ...eventFormData, color })
                           }
                         }}
                       ></button>
@@ -1136,6 +1380,14 @@ export default function Dashboard() {
                     onClick={() => {
                       setShowEventModal(false)
                       setEditingEvent(null)
+                      setEventFormData({
+                        title: '',
+                        time: '',
+                        endTime: '',
+                        location: '',
+                        notes: '',
+                        color: '#007AFF'
+                      })
                     }}
                   >
                     Cancel
@@ -1144,20 +1396,23 @@ export default function Dashboard() {
                     className="btn flex-grow-1"
                     style={{ background: '#007AFF', color: 'white' }}
                     onClick={() => {
-                      // In a real app, you would save the event here
-                      setShowEventModal(false)
-                      setEditingEvent(null)
+                      const dataToSave = editingEvent || eventFormData
+                      if (!dataToSave.title || !dataToSave.time) {
+                        alert('Please fill in title and start time')
+                        return
+                      }
+                      saveEvent(dataToSave)
                     }}
                   >
                     {editingEvent ? 'Save Changes' : 'Create Event'}
                   </button>
-                  {editingEvent && (
+                  {editingEvent && editingEvent.id && (
                     <button
                       className="btn btn-danger"
                       onClick={() => {
-                        setEvents(events.filter(e => e.id !== editingEvent.id))
-                        setShowEventModal(false)
-                        setEditingEvent(null)
+                        if (window.confirm('Are you sure you want to delete this event?')) {
+                          deleteEvent(editingEvent.id)
+                        }
                       }}
                     >
                       <TrashIcon style={{ width: '20px', height: '20px' }} />
